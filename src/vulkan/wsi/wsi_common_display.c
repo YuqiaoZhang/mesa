@@ -1180,7 +1180,7 @@ wsi_display_wait_thread(void *data)
       .events = POLLIN
    };
 
-   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+   // pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
    for (;;) {
       int ret = poll(&pollfd, 1, -1);
       if (ret > 0) {
@@ -1906,7 +1906,7 @@ wsi_display_finish_wsi(struct wsi_device *wsi_device,
 
       pthread_mutex_lock(&wsi->wait_mutex);
       if (wsi->wait_thread) {
-         pthread_cancel(wsi->wait_thread);
+         pthread_kill(wsi->wait_thread, 0);
          pthread_join(wsi->wait_thread, NULL);
       }
       pthread_mutex_unlock(&wsi->wait_mutex);
