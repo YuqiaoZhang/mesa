@@ -148,3 +148,15 @@ void radv_destroy_llvm_compiler(struct ac_llvm_compiler *info,
 	if (!thread_compiler)
 		ac_destroy_llvm_compiler(info);
 }
+
+namespace __cxxabiv1
+{
+extern "C"
+{
+	int __cxa_thread_atexit(void (*dtor)(void *), void *obj, void *dso_symbol) throw()
+	{
+		extern int __cxa_thread_atexit_impl(void (*)(void *), void *, void *);
+		return __cxa_thread_atexit_impl(dtor, obj, dso_symbol);
+	}
+} // extern "C"
+} // namespace __cxxabiv1
