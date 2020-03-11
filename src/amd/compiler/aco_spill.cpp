@@ -278,7 +278,7 @@ aco_ptr<Instruction> do_reload(spill_ctx& ctx, Temp tmp, Temp new_name, uint32_t
       res->definitions[0] = Definition(new_name);
       return res;
    } else {
-      aco_ptr<Pseudo_instruction> reload{create_instruction<Pseudo_instruction>(aco_opcode::p_reload, Format::PSEUDO, 1, 1)};
+      aco_ptr<Instruction> reload{static_cast<Instruction*>(create_instruction<Pseudo_instruction>(aco_opcode::p_reload, Format::PSEUDO, 1, 1))};
       reload->operands[0] = Operand(spill_id);
       reload->definitions[0] = Definition(new_name);
       ctx.is_reloaded[spill_id] = true;
