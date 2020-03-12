@@ -1906,8 +1906,7 @@ wsi_display_finish_wsi(struct wsi_device *wsi_device,
 
       pthread_mutex_lock(&wsi->wait_mutex);
       if (wsi->wait_thread) {
-         pthread_kill(wsi->wait_thread, 0);
-         pthread_join(wsi->wait_thread, NULL);
+         pthread_detach(wsi->wait_thread);
       }
       pthread_mutex_unlock(&wsi->wait_mutex);
       pthread_mutex_destroy(&wsi->wait_mutex);
