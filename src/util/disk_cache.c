@@ -266,42 +266,23 @@ disk_cache_create(const char *gpu_name, const char *driver_id,
 
    if (path == NULL)
    {
-      char *buf;
-      size_t buf_size;
-      struct passwd pwd, *result;
+      char *pwd_pw_dir = getenv("HOME");
 
-      buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
-      if (buf_size == -1)
-         buf_size = 512;
-
-      /* Loop until buf_size is large enough to query the directory */
-      while (1)
+      if (pwd_pw_dir == NULL)
       {
-         buf = ralloc_size(local, buf_size);
-
-         getpwuid_r(getuid(), &pwd, buf, buf_size, &result);
-         if (result)
-            break;
-
-         if (errno == ERANGE)
-         {
-            ralloc_free(buf);
-            buf = NULL;
-            buf_size *= 2;
-         }
-         else
-         {
-            goto path_fail;
-         }
+         fprintf(stderr, "Failed to get environment variable $HOME for shader cache (%s) \n", strerror(errno));
       }
 
-      path = concatenate_and_mkdir(local, pwd.pw_dir, ".cache");
-      if (path == NULL)
-         goto path_fail;
+      if (pwd_pw_dir)
+      {
+         path = concatenate_and_mkdir(local, pwd_pw_dir, ".cache");
+         if (path == NULL)
+            goto path_fail;
 
-      path = concatenate_and_mkdir(local, path, CACHE_DIR_NAME);
-      if (path == NULL)
-         goto path_fail;
+         path = concatenate_and_mkdir(local, path, CACHE_DIR_NAME);
+         if (path == NULL)
+            goto path_fail;
+      }
    }
 
    cache->path = ralloc_strdup(cache, path);
