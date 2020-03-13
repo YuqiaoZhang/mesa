@@ -23,7 +23,7 @@
 # configure.ac)
 
 gallium_xlib_c_args = [
-  '-DGALLIUM_SOFTPIPE',
+  '-DGALLIUM_ZINK',
 ]
 gallium_xlib_ld_args = []
 gallium_xlib_link_with = []
@@ -49,9 +49,8 @@ libgl = shared_library(
   link_depends : gallium_xlib_link_depends,
   link_with : [
     libxlib, libws_xlib, libglapi_static,
-    libgallium, libmesa_gallium, gallium_xlib_link_with,
+    libgallium, libmesa_gallium, gallium_xlib_link_with, 
   ],
-  dependencies : [dep_thread, dep_clock, dep_unwind, driver_swrast, driver_swr],
+  dependencies : [dep_thread, dep_clock, dep_unwind, driver_zink],
   install : true,
-  version : '1.5.0',
 )

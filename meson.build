@@ -397,8 +397,8 @@ if with_glx != 'disabled'
   elif with_glx == 'gallium-xlib'
     if not with_gallium
       error('Gallium-xlib based GLX requires at least one gallium driver')
-    elif not with_gallium_softpipe
-      error('Gallium-xlib based GLX requires softpipe or llvmpipe.')
+    elif not (with_gallium_zink)
+      error('Gallium-xlib based GLX requires zink.')
     elif with_dri
       error('gallium-xlib conflicts with any dri driver')
     endif
