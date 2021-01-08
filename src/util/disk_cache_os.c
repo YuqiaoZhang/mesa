@@ -63,16 +63,18 @@ deflate_and_write_to_disk(const void *in_data, size_t in_data_size, int dest)
     * compression runs faster if `dstCapacity` >= `ZSTD_compressBound(srcSize)`.
     */
    size_t out_size = ZSTD_compressBound(in_data_size);
-   void * out = malloc(out_size);
+   void *out = malloc(out_size);
 
    size_t ret = ZSTD_compress(out, out_size, in_data, in_data_size,
                               ZSTD_COMPRESSION_LEVEL);
-   if (ZSTD_isError(ret)) {
+   if (ZSTD_isError(ret))
+   {
       free(out);
       return 0;
    }
    ssize_t written = write_all(dest, out, ret);
-   if (written == -1) {
+   if (written == -1)
+   {
       free(out);
       return 0;
    }
@@ -86,12 +88,12 @@ deflate_and_write_to_disk(const void *in_data, size_t in_data_size, int dest)
    strm.zalloc = Z_NULL;
    strm.zfree = Z_NULL;
    strm.opaque = Z_NULL;
-   strm.next_in = (uint8_t *) in_data;
+   strm.next_in = (uint8_t *)in_data;
    strm.avail_in = in_data_size;
 
    int ret = deflateInit(&strm, Z_BEST_COMPRESSION);
    if (ret != Z_OK)
-       return 0;
+      return 0;
 
    /* compress until end of in_data */
    size_t compressed_size = 0;
@@ -101,7 +103,8 @@ deflate_and_write_to_disk(const void *in_data, size_t in_data_size, int dest)
    if (out == NULL)
       return 0;
 
-   do {
+   do
+   {
       int remaining = in_data_size - BUFSIZE;
       flush = remaining > 0 ? Z_NO_FLUSH : Z_FINISH;
       in_data_size -= BUFSIZE;
@@ -109,18 +112,20 @@ deflate_and_write_to_disk(const void *in_data, size_t in_data_size, int dest)
       /* Run deflate() on input until the output buffer is not full (which
        * means there is no more data to deflate).
        */
-      do {
+      do
+      {
          strm.avail_out = BUFSIZE;
          strm.next_out = out;
 
-         ret = deflate(&strm, flush);    /* no bad return value */
-         assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+         ret = deflate(&strm, flush);   /* no bad return value */
+         assert(ret != Z_STREAM_ERROR); /* state not clobbered */
 
          size_t have = BUFSIZE - strm.avail_out;
          compressed_size += have;
 
          ssize_t written = write_all(dest, out, have);
-         if (written == -1) {
+         if (written == -1)
+         {
             (void)deflateEnd(&strm);
             free(out);
             return 0;
@@ -139,7 +144,7 @@ deflate_and_write_to_disk(const void *in_data, size_t in_data_size, int dest)
    (void)deflateEnd(&strm);
    free(out);
    return compressed_size;
-# endif
+#endif
 }
 
 /**
@@ -169,12 +174,13 @@ inflate_cache_data(uint8_t *in_data, size_t in_data_size,
       return false;
 
    ret = inflate(&strm, Z_NO_FLUSH);
-   assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+   assert(ret != Z_STREAM_ERROR); /* state not clobbered */
 
    /* Unless there was an error we should have decompressed everything in one
     * go as we know the uncompressed file size.
     */
-   if (ret != Z_STREAM_END) {
+   if (ret != Z_STREAM_END)
+   {
       (void)inflateEnd(&strm);
       return false;
    }
@@ -222,19 +228,24 @@ mkdir_if_needed(const char *path)
    /* If the path exists already, then our work is done if it's a
     * directory, but it's an error if it is not.
     */
-   if (stat(path, &sb) == 0) {
-      if (S_ISDIR(sb.st_mode)) {
+   if (stat(path, &sb) == 0)
+   {
+      if (S_ISDIR(sb.st_mode))
+      {
          return 0;
-      } else {
+      }
+      else
+      {
          fprintf(stderr, "Cannot use %s for shader cache (not a directory)"
-                         "---disabling.\n", path);
+                         "---disabling.\n",
+                 path);
          return -1;
       }
    }
 
    int ret = mkdir(path, 0755);
    if (ret == 0 || (ret == -1 && errno == EEXIST))
-     return 0;
+      return 0;
 
    fprintf(stderr, "Failed to create %s for shader cache (%s)---disabling.\n",
            path, strerror(errno));
@@ -258,7 +269,7 @@ concatenate_and_mkdir(void *ctx, const char *path, const char *name)
    char *new_path;
    struct stat sb;
 
-   if (stat(path, &sb) != 0 || ! S_ISDIR(sb.st_mode))
+   if (stat(path, &sb) != 0 || !S_ISDIR(sb.st_mode))
       return NULL;
 
    new_path = ralloc_asprintf(ctx, "%s/%s", path, name);
@@ -293,21 +304,25 @@ choose_lru_file_matching(const char *dir_path,
    if (dir == NULL)
       return NULL;
 
-   while (1) {
+   while (1)
+   {
       entry = readdir(dir);
       if (entry == NULL)
          break;
 
       struct stat sb;
-      if (fstatat(dirfd(dir), entry->d_name, &sb, 0) == 0) {
-         if (!lru_atime || (sb.st_atime < lru_atime)) {
+      if (fstatat(dirfd(dir), entry->d_name, &sb, 0) == 0)
+      {
+         if (!lru_atime || (sb.st_atime < lru_atime))
+         {
             size_t len = strlen(entry->d_name);
 
             if (!predicate(dir_path, &sb, entry->d_name, len))
                continue;
 
             char *tmp = realloc(lru_name, len + 1);
-            if (tmp) {
+            if (tmp)
+            {
                lru_name = tmp;
                memcpy(lru_name, entry->d_name, len + 1);
                lru_atime = sb.st_atime;
@@ -316,7 +331,8 @@ choose_lru_file_matching(const char *dir_path,
       }
    }
 
-   if (lru_name == NULL) {
+   if (lru_name == NULL)
+   {
       closedir(dir);
       return NULL;
    }
@@ -340,7 +356,7 @@ is_regular_non_tmp_file(const char *path, const struct stat *sb,
    if (!S_ISREG(sb->st_mode))
       return false;
 
-   if (len >= 4 && strcmp(&d_name[len-4], ".tmp") == 0)
+   if (len >= 4 && strcmp(&d_name[len - 4], ".tmp") == 0)
       return false;
 
    return true;
@@ -357,13 +373,14 @@ unlink_lru_file_from_directory(const char *path)
    if (filename == NULL)
       return 0;
 
-   if (stat(filename, &sb) == -1) {
-      free (filename);
+   if (stat(filename, &sb) == -1)
+   {
+      free(filename);
       return 0;
    }
 
    unlink(filename);
-   free (filename);
+   free(filename);
 
    return sb.st_blocks * 512;
 }
@@ -391,12 +408,13 @@ is_two_character_sub_directory(const char *path, const struct stat *sb,
    free(subdir);
 
    if (dir == NULL)
-     return false;
+      return false;
 
    unsigned subdir_entries = 0;
    struct dirent *d;
-   while ((d = readdir(dir)) != NULL) {
-      if(++subdir_entries > 2)
+   while ((d = readdir(dir)) != NULL)
+   {
+      if (++subdir_entries > 2)
          break;
    }
    closedir(dir);
@@ -434,7 +452,8 @@ read_all(int fd, void *buf, size_t count)
    ssize_t read_ret;
    size_t done;
 
-   for (done = 0; done < count; done += read_ret) {
+   for (done = 0; done < count; done += read_ret)
+   {
       read_ret = read(fd, in + done, count - done);
       if (read_ret == -1 || read_ret == 0)
          return -1;
@@ -449,7 +468,8 @@ write_all(int fd, const void *buf, size_t count)
    ssize_t written;
    size_t done;
 
-   for (done = 0; done < count; done += written) {
+   for (done = 0; done < count; done += written)
+   {
       written = write(fd, out + done, count - done);
       if (written == -1)
          return -1;
@@ -458,8 +478,7 @@ write_all(int fd, const void *buf, size_t count)
 }
 
 /* Evict least recently used cache item */
-void
-disk_cache_evict_lru_item(struct disk_cache *cache)
+void disk_cache_evict_lru_item(struct disk_cache *cache)
 {
    char *dir_path;
 
@@ -469,15 +488,16 @@ disk_cache_evict_lru_item(struct disk_cache *cache)
     * Provides pseudo-LRU eviction to reduce checking all cache files.
     */
    uint64_t rand64 = rand_xorshift128plus(cache->seed_xorshift128plus);
-   if (asprintf(&dir_path, "%s/%02" PRIx64 , cache->path, rand64 & 0xff) < 0)
+   if (asprintf(&dir_path, "%s/%02" PRIx64, cache->path, rand64 & 0xff) < 0)
       return;
 
    size_t size = unlink_lru_file_from_directory(dir_path);
 
    free(dir_path);
 
-   if (size) {
-      p_atomic_add(cache->size, - (uint64_t)size);
+   if (size)
+   {
+      p_atomic_add(cache->size, -(uint64_t)size);
       return;
    }
 
@@ -499,14 +519,14 @@ disk_cache_evict_lru_item(struct disk_cache *cache)
    free(dir_path);
 
    if (size)
-      p_atomic_add(cache->size, - (uint64_t)size);
+      p_atomic_add(cache->size, -(uint64_t)size);
 }
 
-void
-disk_cache_evict_item(struct disk_cache *cache, char *filename)
+void disk_cache_evict_item(struct disk_cache *cache, char *filename)
 {
    struct stat sb;
-   if (stat(filename, &sb) == -1) {
+   if (stat(filename, &sb) == -1)
+   {
       free(filename);
       return;
    }
@@ -515,7 +535,7 @@ disk_cache_evict_item(struct disk_cache *cache, char *filename)
    free(filename);
 
    if (sb.st_blocks)
-      p_atomic_add(cache->size, - (uint64_t)sb.st_blocks * 512);
+      p_atomic_add(cache->size, -(uint64_t)sb.st_blocks * 512);
 }
 
 void *
@@ -551,7 +571,8 @@ disk_cache_load_item(struct disk_cache *cache, char *filename, size_t *size)
       goto fail;
 
    /* Check for extremely unlikely hash collisions */
-   if (memcmp(cache->driver_keys_blob, file_header, ck_size) != 0) {
+   if (memcmp(cache->driver_keys_blob, file_header, ck_size) != 0)
+   {
       assert(!"Mesa cache keys mismatch!");
       goto fail;
    }
@@ -562,7 +583,8 @@ disk_cache_load_item(struct disk_cache *cache, char *filename, size_t *size)
    if (ret == -1)
       goto fail;
 
-   if (md_type == CACHE_ITEM_TYPE_GLSL) {
+   if (md_type == CACHE_ITEM_TYPE_GLSL)
+   {
       uint32_t num_keys;
       cache_item_md_size += sizeof(uint32_t);
       ret = read_all(fd, &num_keys, sizeof(uint32_t));
@@ -590,7 +612,7 @@ disk_cache_load_item(struct disk_cache *cache, char *filename, size_t *size)
 
    /* Load the actual cache data. */
    size_t cache_data_size =
-      sb.st_size - cf_data_size - ck_size - cache_item_md_size;
+       sb.st_size - cf_data_size - ck_size - cache_item_md_size;
    ret = read_all(fd, data, cache_data_size);
    if (ret == -1)
       goto fail;
@@ -616,7 +638,7 @@ disk_cache_load_item(struct disk_cache *cache, char *filename, size_t *size)
 
    return uncompressed_data;
 
- fail:
+fail:
    if (data)
       free(data);
    if (filename)
@@ -652,10 +674,9 @@ disk_cache_get_cache_filename(struct disk_cache *cache, const cache_key key)
    return filename;
 }
 
-void
-disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
-                              struct cache_entry_file_data *cf_data,
-                              char *filename)
+void disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
+                                   struct cache_entry_file_data *cf_data,
+                                   char *filename)
 {
    int fd = -1, fd_final = -1;
 
@@ -670,7 +691,8 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
    fd = open(filename_tmp, O_WRONLY | O_CLOEXEC | O_CREAT, 0644);
 
    /* Make the two-character subdirectory within the cache as needed. */
-   if (fd == -1) {
+   if (fd == -1)
+   {
       if (errno != ENOENT)
          goto done;
 
@@ -690,11 +712,10 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
    int err = flock(fd, LOCK_EX | LOCK_NB);
 #else
    struct flock lock = {
-      .l_start = 0,
-      .l_len = 0, /* entire file */
-      .l_type = F_WRLCK,
-      .l_whence = SEEK_SET
-   };
+       .l_start = 0,
+       .l_len = 0, /* entire file */
+       .l_type = F_WRLCK,
+       .l_whence = SEEK_SET};
    int err = fcntl(fd, F_SETLK, &lock);
 #endif
    if (err == -1)
@@ -707,7 +728,8 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
     * (to ensure the size accounting of the cache doesn't get off).
     */
    fd_final = open(filename, O_RDONLY | O_CLOEXEC);
-   if (fd_final != -1) {
+   if (fd_final != -1)
+   {
       unlink(filename_tmp);
       goto done;
    }
@@ -723,7 +745,8 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
     */
    int ret = write_all(fd, dc_job->cache->driver_keys_blob,
                        dc_job->cache->driver_keys_blob_size);
-   if (ret == -1) {
+   if (ret == -1)
+   {
       unlink(filename_tmp);
       goto done;
    }
@@ -734,23 +757,27 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
     */
    ret = write_all(fd, &dc_job->cache_item_metadata.type,
                    sizeof(uint32_t));
-   if (ret == -1) {
+   if (ret == -1)
+   {
       unlink(filename_tmp);
       goto done;
    }
 
-   if (dc_job->cache_item_metadata.type == CACHE_ITEM_TYPE_GLSL) {
+   if (dc_job->cache_item_metadata.type == CACHE_ITEM_TYPE_GLSL)
+   {
       ret = write_all(fd, &dc_job->cache_item_metadata.num_keys,
                       sizeof(uint32_t));
-      if (ret == -1) {
+      if (ret == -1)
+      {
          unlink(filename_tmp);
          goto done;
       }
 
       ret = write_all(fd, dc_job->cache_item_metadata.keys[0],
                       dc_job->cache_item_metadata.num_keys *
-                      sizeof(cache_key));
-      if (ret == -1) {
+                          sizeof(cache_key));
+      if (ret == -1)
+      {
          unlink(filename_tmp);
          goto done;
       }
@@ -758,7 +785,8 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
 
    size_t cf_data_size = sizeof(*cf_data);
    ret = write_all(fd, cf_data, cf_data_size);
-   if (ret == -1) {
+   if (ret == -1)
+   {
       unlink(filename_tmp);
       goto done;
    }
@@ -769,18 +797,21 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
     */
    size_t file_size = deflate_and_write_to_disk(dc_job->data, dc_job->size,
                                                 fd);
-   if (file_size == 0) {
+   if (file_size == 0)
+   {
       unlink(filename_tmp);
       goto done;
    }
    ret = rename(filename_tmp, filename);
-   if (ret == -1) {
+   if (ret == -1)
+   {
       unlink(filename_tmp);
       goto done;
    }
 
    struct stat sb;
-   if (stat(filename, &sb) == -1) {
+   if (stat(filename, &sb) == -1)
+   {
       /* Something went wrong remove the file */
       unlink(filename);
       goto done;
@@ -788,7 +819,7 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
 
    p_atomic_add(dc_job->cache->size, sb.st_blocks * 512);
 
- done:
+done:
    if (fd_final != -1)
       close(fd_final);
    /* This close finally releases the flock, (now that the final file
@@ -809,7 +840,8 @@ char *
 disk_cache_generate_cache_dir(void *mem_ctx)
 {
    char *path = getenv("MESA_GLSL_CACHE_DIR");
-   if (path) {
+   if (path)
+   {
       if (mkdir_if_needed(path) == -1)
          return NULL;
 
@@ -818,10 +850,12 @@ disk_cache_generate_cache_dir(void *mem_ctx)
          return NULL;
    }
 
-   if (path == NULL) {
+   if (path == NULL)
+   {
       char *xdg_cache_home = getenv("XDG_CACHE_HOME");
 
-      if (xdg_cache_home) {
+      if (xdg_cache_home)
+      {
          if (mkdir_if_needed(xdg_cache_home) == -1)
             return NULL;
 
@@ -831,7 +865,8 @@ disk_cache_generate_cache_dir(void *mem_ctx)
       }
    }
 
-   if (!path) {
+   if (!path)
+   {
       char *buf;
       size_t buf_size;
       struct passwd pwd, *result;
@@ -841,18 +876,22 @@ disk_cache_generate_cache_dir(void *mem_ctx)
          buf_size = 512;
 
       /* Loop until buf_size is large enough to query the directory */
-      while (1) {
+      while (1)
+      {
          buf = ralloc_size(mem_ctx, buf_size);
 
          getpwuid_r(getuid(), &pwd, buf, buf_size, &result);
          if (result)
             break;
 
-         if (errno == ERANGE) {
+         if (errno == ERANGE)
+         {
             ralloc_free(buf);
             buf = NULL;
             buf_size *= 2;
-         } else {
+         }
+         else
+         {
             return NULL;
          }
       }
@@ -869,14 +908,13 @@ disk_cache_generate_cache_dir(void *mem_ctx)
    return path;
 }
 
-bool
-disk_cache_enabled()
+bool disk_cache_enabled()
 {
    /* If running as a users other than the real user disable cache */
    if (geteuid() != getuid())
       return false;
 
-   /* At user request, disable shader cache entirely. */
+      /* At user request, disable shader cache entirely. */
 #ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
    bool disable_by_default = true;
 #else
@@ -888,9 +926,8 @@ disk_cache_enabled()
    return true;
 }
 
-bool
-disk_cache_mmap_cache_index(void *mem_ctx, struct disk_cache *cache,
-                            char *path)
+bool disk_cache_mmap_cache_index(void *mem_ctx, struct disk_cache *cache,
+                                 char *path)
 {
    int fd = -1;
    bool mapped = false;
@@ -913,7 +950,8 @@ disk_cache_mmap_cache_index(void *mem_ctx, struct disk_cache *cache,
 
    /* Force the index file to be the expected size. */
    size_t size = sizeof(*cache->size) + CACHE_INDEX_MAX_KEYS * CACHE_KEY_SIZE;
-   if (sb.st_size != size) {
+   if (sb.st_size != size)
+   {
       if (ftruncate(fd, size) == -1)
          goto path_fail;
    }
@@ -939,7 +977,7 @@ disk_cache_mmap_cache_index(void *mem_ctx, struct disk_cache *cache,
       goto path_fail;
    cache->index_mmap_size = size;
 
-   cache->size = (uint64_t *) cache->index_mmap;
+   cache->size = (uint64_t *)cache->index_mmap;
    cache->stored_keys = cache->index_mmap + sizeof(uint64_t);
    mapped = true;
 
@@ -950,8 +988,7 @@ path_fail:
    return mapped;
 }
 
-void
-disk_cache_destroy_mmap(struct disk_cache *cache)
+void disk_cache_destroy_mmap(struct disk_cache *cache)
 {
    munmap(cache->index_mmap, cache->index_mmap_size);
 }

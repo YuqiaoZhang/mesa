@@ -52,7 +52,6 @@
 #include <sys/stat.h>
 #endif
 
-
 using namespace llvm;
 using namespace SwrJit;
 
@@ -69,7 +68,6 @@ JitManager::JitManager(uint32_t simdWidth, const char* arch, const char* core) :
     InitializeNativeTarget();
     InitializeNativeTargetAsmPrinter();
     InitializeNativeTargetDisassembler();
-
 
     // force JIT to use the same CPU arch as the rest of swr
     if (mArch.AVX512F())
@@ -119,7 +117,6 @@ JitManager::JitManager(uint32_t simdWidth, const char* arch, const char* core) :
     {
         SWR_INVALID("Jitting requires at least AVX ISA support");
     }
-
 
     mOptLevel = CodeGenOpt::Aggressive;
 
@@ -184,7 +181,7 @@ void JitManager::CreateExecEngine(std::unique_ptr<Module> pModule)
     tOpts.AllowFPOpFusion = FPOpFusion::Fast;
     tOpts.NoInfsFPMath    = false;
     tOpts.NoNaNsFPMath    = false;
-    tOpts.UnsafeFPMath = false;
+    tOpts.UnsafeFPMath    = false;
 
     // tOpts.PrintMachineCode    = true;
 
@@ -219,7 +216,6 @@ void JitManager::SetupNewModule()
     CreateExecEngine(std::move(newModule));
     mIsModuleFinalized = false;
 }
-
 
 DIType*
 JitManager::CreateDebugStructType(StructType*                                          pType,
@@ -437,8 +433,7 @@ void JitManager::DumpAsm(Function* pFunction, const char* fileName)
         auto*                pTarget          = mpExec->getTargetMachine();
         pTarget->Options.MCOptions.AsmVerbose = true;
 #if LLVM_VERSION_MAJOR >= 10
-        pTarget->addPassesToEmitFile(
-            *pMPasses, filestream, nullptr, CGFT_AssemblyFile);
+        pTarget->addPassesToEmitFile(*pMPasses, filestream, nullptr, CGFT_AssemblyFile);
 #elif LLVM_VERSION_MAJOR >= 7
         pTarget->addPassesToEmitFile(
             *pMPasses, filestream, nullptr, TargetMachine::CGFT_AssemblyFile);
@@ -571,7 +566,6 @@ struct JitCacheFileHeader
         m_optLevel                = optLevel;
     }
 
-
     bool
     IsValid(uint32_t llCRC, const std::string& moduleID, const std::string& cpu, uint32_t optLevel)
     {
@@ -660,12 +654,10 @@ JitCache::JitCache()
     {
         SWR_INVALID("Unable to create directory: %s", mCacheDir.c_str());
     }
-
 }
 
 int ExecUnhookedProcess(const std::string& CmdLine, std::string* pStdOut, std::string* pStdErr)
 {
-
     return ExecCmd(CmdLine, nullptr, pStdOut, pStdErr);
 }
 
@@ -724,7 +716,6 @@ void JitCache::notifyObjectCompiled(const llvm::Module* M, llvm::MemoryBufferRef
         fileObj << Obj.getBuffer();
         fileObj.flush();
     }
-
 
     {
         std::error_code      err;
@@ -818,7 +809,6 @@ std::unique_ptr<llvm::MemoryBuffer> JitCache::getObject(const llvm::Module* M)
     {
         fclose(fpObjIn);
     }
-
 
     return pBuf;
 }
