@@ -21,7 +21,7 @@
 option(
   'platforms',
   type : 'array',
-  value : ['x11','drm','surfaceless'],
+  value : ['x11'],
   choices : [
     'auto', 'x11', 'wayland', 'haiku', 'android', 'windows',
   ],
