@@ -1488,15 +1488,8 @@ elif _llvm == 'false'
   warning('llvm option "false" deprecated, please use "disabled" instead.')
 endif
 
-# the cmake method can only link statically, so don't attempt to use it if we
-# want to link dynamically. Before 0.54.0 meson will try cmake even when shared
-# linking is requested, so we need to force the config-tool method to be used
-# in that case, but in 0.54.0 meson won't try the cmake method if shared
-# linking is requested.
-_llvm_method = 'auto'
-if meson.version().version_compare('< 0.54.0') and _shared_llvm
-  _llvm_method = 'config-tool'
-endif
+# disable the cmake method 
+_llvm_method = 'config-tool'
 
 dep_llvm = null_dep
 with_llvm = false
@@ -1525,14 +1518,12 @@ if with_llvm
   # programs, so we need to build all C++ code in mesa without rtti as well to
   # ensure that linking works.
   #
-  # In meson 0.51.0 we can use cmake to find LLVM in addittion to meson's
-  # builtin llvm-config based finder. A new generic variable getter method
-  # has also been added, so we'll use that if we can, to cover the cmake case.
+  # use meson's builtin llvm-config based finder. disable the cmake finder.
   if dep_llvm.type_name() == 'internal'
     _rtti = subproject('llvm').get_variable('has_rtti', true)
   else
-    # The CMake finder will return 'ON', the llvm-config will return 'YES'
-    _rtti = ['ON', 'YES'].contains(dep_llvm.get_variable(cmake : 'LLVM_ENABLE_RTTI', configtool: 'has-rtti'))
+    # The llvm-config will return 'YES'
+    _rtti = dep_llvm.get_configtool_variable('has-rtti') == 'YES'
   endif
   if not _rtti
     if with_gallium_nouveau
