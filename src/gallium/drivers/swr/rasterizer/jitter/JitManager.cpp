@@ -633,12 +633,15 @@ JitCache::JitCache()
 #if defined(__APPLE__) || defined(FORCE_LINUX) || defined(__linux__) || defined(__gnu_linux__)
     if (strncmp(KNOB_JIT_CACHE_DIR.c_str(), "~/", 2) == 0)
     {
-        char* homedir;
-        if (!(homedir = getenv("HOME")))
+        char* homedir = getenv("HOME");
+        if (homedir)
         {
-            homedir = getpwuid(getuid())->pw_dir;
+            mCacheDir = homedir;
         }
-        mCacheDir = homedir;
+        else
+        {
+            mCacheDir = ""
+        }
         mCacheDir += (KNOB_JIT_CACHE_DIR.c_str() + 1);
     }
     else

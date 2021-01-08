@@ -867,40 +867,19 @@ disk_cache_generate_cache_dir(void *mem_ctx)
 
    if (!path)
    {
-      char *buf;
-      size_t buf_size;
-      struct passwd pwd, *result;
+      char *pwd_pw_dir = getenv("HOME");
 
-      buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
-      if (buf_size == -1)
-         buf_size = 512;
-
-      /* Loop until buf_size is large enough to query the directory */
-      while (1)
+      if (pwd_pw_dir == NULL)
       {
-         buf = ralloc_size(mem_ctx, buf_size);
-
-         getpwuid_r(getuid(), &pwd, buf, buf_size, &result);
-         if (result)
-            break;
-
-         if (errno == ERANGE)
-         {
-            ralloc_free(buf);
-            buf = NULL;
-            buf_size *= 2;
-         }
-         else
-         {
-            return NULL;
-         }
+         fprintf(stderr, "Failed to get environment variable $HOME for shader cache (%s) \n", strerror(errno));
+         return NULL;
       }
 
-      path = concatenate_and_mkdir(mem_ctx, pwd.pw_dir, ".cache");
+      path = concatenate_and_mkdir(mem_ctx, pwd_pw_dir, ".cache");
       if (!path)
          return NULL;
 
-      path = concatenate_and_mkdir(mem_ctx, path, CACHE_DIR_NAME);
+      path = concatenate_and_mkdir(mem_ctx, pwd_pw_dir, CACHE_DIR_NAME);
       if (!path)
          return NULL;
    }

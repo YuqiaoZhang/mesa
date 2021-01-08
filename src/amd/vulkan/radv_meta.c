@@ -299,8 +299,6 @@ radv_builtin_cache_path(char *path)
 	char *xdg_cache_home = getenv("XDG_CACHE_HOME");
 	const char *suffix = "/radv_builtin_shaders";
 	const char *suffix2 = "/.cache/radv_builtin_shaders";
-	struct passwd pwd, *result;
-	char path2[PATH_MAX + 1]; /* PATH_MAX is not a real max,but suffices here. */
 	int ret;
 
 	if (xdg_cache_home)
@@ -310,17 +308,17 @@ radv_builtin_cache_path(char *path)
 		return ret > 0 && ret < PATH_MAX + 1;
 	}
 
-	getpwuid_r(getuid(), &pwd, path2, PATH_MAX - strlen(suffix2), &result);
-	if (!result)
+	char *pwd_pw_dir = getenv("HOME");
+	if (!pwd_pw_dir)
 		return false;
 
-	strcpy(path, pwd.pw_dir);
+	strcpy(path, pwd_pw_dir);
 	strcat(path, "/.cache");
 	if (mkdir(path, 0755) && errno != EEXIST)
 		return false;
 
 	ret = snprintf(path, PATH_MAX + 1, "%s%s%zd",
-				   pwd.pw_dir, suffix2, sizeof(void *) * 8);
+				   pwd_pw_dir, suffix2, sizeof(void *) * 8);
 	return ret > 0 && ret < PATH_MAX + 1;
 }
 
