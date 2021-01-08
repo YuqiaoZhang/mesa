@@ -249,7 +249,7 @@ option(
 option(
   'glx',
   type : 'combo',
-  value : 'xlib',
+  value : 'disabled',
   choices : ['auto', 'disabled', 'dri', 'xlib', 'gallium-xlib'],
   description : 'Build support for GLX platform'
 )
@@ -263,7 +263,7 @@ option(
 option(
   'glvnd',
   type : 'boolean',
-  value : true,
+  value : false,
   description : 'Enable GLVND support.'
 )
 option(
