@@ -21,7 +21,7 @@
 option(
   'platforms',
   type : 'array',
-  value : ['auto'],
+  value : ['x11'],
   choices : [
     'auto', 'x11', 'wayland', 'haiku', 'android', 'windows',
   ],
@@ -44,7 +44,7 @@ option(
 option(
   'dri-drivers',
   type : 'array',
-  value : ['auto'],
+  value : [''],
   choices : ['auto', 'i915', 'i965', 'r100', 'r200', 'nouveau', 'swrast'],
   description : 'List of dri drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
 )
@@ -63,7 +63,7 @@ option(
 option(
   'gallium-drivers',
   type : 'array',
-  value : ['auto'],
+  value : ['zink'],
   choices : [
     'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
     'swrast', 'v3d', 'vc4', 'etnaviv', 'tegra', 'i915', 'svga', 'virgl',
@@ -171,7 +171,7 @@ option(
 option(
   'vulkan-drivers',
   type : 'array',
-  value : ['auto'],
+  value : ['amd', 'intel'],
   choices : ['auto', 'amd', 'broadcom', 'freedreno', 'intel', 'swrast'],
   description : 'List of vulkan drivers to build. If this is set to auto all drivers applicable to the target OS/architecture will be built'
 )
@@ -248,7 +248,7 @@ option(
 )
 option(
   'glx',
-  type : 'combo',
+  type : 'xlib',
   value : 'auto',
   choices : ['auto', 'disabled', 'dri', 'xlib', 'gallium-xlib'],
   description : 'Build support for GLX platform'
