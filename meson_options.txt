@@ -21,7 +21,7 @@
 option(
   'platforms',
   type : 'array',
-  value : ['x11'],
+  value : ['x11','drm','surfaceless'],
   choices : [
     'auto', 'x11', 'wayland', 'haiku', 'android', 'windows',
   ],
@@ -63,7 +63,7 @@ option(
 option(
   'gallium-drivers',
   type : 'array',
-  value : ['zink'],
+  value : [''],
   choices : [
     'auto', 'kmsro', 'radeonsi', 'r300', 'r600', 'nouveau', 'freedreno',
     'swrast', 'v3d', 'vc4', 'etnaviv', 'tegra', 'i915', 'svga', 'virgl',
@@ -222,48 +222,48 @@ option(
 option(
   'gles1',
   type : 'combo',
-  value : 'auto',
+  value : 'false',
   choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for OpenGL ES 1.x'
 )
 option(
   'gles2',
   type : 'combo',
-  value : 'auto',
+  value : 'false',
   choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for OpenGL ES 2.x and 3.x'
 )
 option(
   'opengl',
   type : 'boolean',
-  value : true,
+  value : false,
   description : 'Build support for OpenGL (all versions)'
 )
 option(
   'gbm',
   type : 'combo',
-  value : 'auto',
+  value : 'false',
   choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for gbm platform'
 )
 option(
   'glx',
-  type : 'xlib',
-  value : 'auto',
+  type : 'combo',
+  value : 'xlib',
   choices : ['auto', 'disabled', 'dri', 'xlib', 'gallium-xlib'],
   description : 'Build support for GLX platform'
 )
 option(
   'egl',
   type : 'combo',
-  value : 'auto',
+  value : 'false',
   choices : ['auto', 'true', 'false', 'enabled', 'disabled'],
   description : 'Build support for EGL platform'
 )
 option(
   'glvnd',
   type : 'boolean',
-  value : false,
+  value : true,
   description : 'Enable GLVND support.'
 )
 option(
