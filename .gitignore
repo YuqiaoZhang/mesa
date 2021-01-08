@@ -2,3 +2,5 @@
 *.pyo
 *.out
 build
+build32
+build64
