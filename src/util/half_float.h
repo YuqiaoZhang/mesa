@@ -60,12 +60,9 @@ _mesa_float_to_half(float val)
 {
 #if defined(USE_X86_64_ASM)
    if (util_cpu_caps.has_f16c) {
-      __m128 in = {val};
-      __m128i out;
-
       /* $0 = round to nearest */
-      __asm volatile("vcvtps2ph $0, %1, %0" : "=v"(out) : "v"(in));
-      return out[0];
+      uint16_t out = _cvtss_sh(val, (_MM_FROUND_TO_NEAREST_INT | _MM_FROUND_RAISE_EXC));
+      return out;
    }
 #endif
    return _mesa_float_to_half_slow(val);
@@ -76,11 +73,8 @@ _mesa_half_to_float(uint16_t val)
 {
 #if defined(USE_X86_64_ASM)
    if (util_cpu_caps.has_f16c) {
-      __m128i in = {val};
-      __m128 out;
-
-      __asm volatile("vcvtph2ps %1, %0" : "=v"(out) : "v"(in));
-      return out[0];
+      float out = _cvtsh_ss(val);
+      return out;
    }
 #endif
    return _mesa_half_to_float_slow(val);
@@ -91,12 +85,9 @@ _mesa_float_to_float16_rtz(float val)
 {
 #if defined(USE_X86_64_ASM)
    if (util_cpu_caps.has_f16c) {
-      __m128 in = {val};
-      __m128i out;
-
       /* $3 = round towards zero (truncate) */
-      __asm volatile("vcvtps2ph $3, %1, %0" : "=v"(out) : "v"(in));
-      return out[0];
+      uint16_t out = _cvtss_sh(val, (_MM_FROUND_TO_ZERO | _MM_FROUND_RAISE_EXC));
+      return out;
    }
 #endif
    return _mesa_float_to_float16_rtz_slow(val);

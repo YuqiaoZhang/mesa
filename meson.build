@@ -971,10 +971,10 @@ elif host_machine.system() == 'openbsd'
 endif
 
 # Check for generic C arguments
-c_args = []
+c_args = ['-mxsave', '-mavx', '-mf16c']
 c_msvc_compat_args = []
 no_override_init_args = []
-cpp_args = []
+cpp_args = ['-mxsave', '-mavx', '-mf16c']
 cpp_msvc_compat_args = []
 if cc.get_id() == 'msvc'
   foreach a : ['/wd4018',  # signed/unsigned mismatch
